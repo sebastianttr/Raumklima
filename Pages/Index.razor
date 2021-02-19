@@ -1,0 +1,122 @@
+﻿@page "/"
+
+@using DataAccesLibrary
+@using Raumklima.Components
+
+@inject RaumklimaManager raumKlimaManager
+
+<div class="fade-in">
+    <h5>Guten Tag,</h5>
+    <h2>Sebastian Tatar</h2>
+    <hr style="width:50%;text-align:left;margin-left:0;">
+
+    @if (raumKlimaManager.messwerte is null)
+    {
+        <p><em>Loading ... </em></p>
+    }
+    else
+    {
+        <h4>Aktuelle Sensor-Messwerte</h4>
+        <div class="flexBox">
+            @foreach (var sensor in raumKlimaManager.sensoren)
+            {
+            <div class="customCard flexBox2">
+                    <SensorCard Messwert="@raumKlimaManager.GetLastMesswerteBySensorID(sensor.SensorID)"
+                                CardName="Temperatur: "
+                                RaumName="@raumKlimaManager.GetRaumbezeichnungByID(sensor.SensorID)"
+                                stateUpdateRequest="@updateRequest">
+                        @raumKlimaManager.GetLastMesswerteBySensorID(sensor.SensorID).Temperatur °C
+                    </SensorCard>
+                    <SensorCard Messwert="@raumKlimaManager.GetLastMesswerteBySensorID(sensor.SensorID)"
+                                CardName="Feuchte: "
+                                RaumName="@raumKlimaManager.GetRaumbezeichnungByID(sensor.SensorID)"
+                                stateUpdateRequest="@updateRequest">
+                        @raumKlimaManager.GetLastMesswerteBySensorID(sensor.SensorID).Feuchte %
+                    </SensorCard>
+                    <SensorCard Messwert="@raumKlimaManager.GetLastMesswerteBySensorID(sensor.SensorID)"
+                                CardName="CO2: "
+                                RaumName="@raumKlimaManager.GetRaumbezeichnungByID(sensor.SensorID)"
+                                stateUpdateRequest="@updateRequest">
+                        @raumKlimaManager.GetLastMesswerteBySensorID(sensor.SensorID).CO2 ppm
+                    </SensorCard>
+            </div>
+            }
+        </div>
+
+        <h4>Raumklima in den einzelnen Räumen</h4>
+        <div class="flexBox">
+            @foreach (var sensor in raumKlimaManager.sensoren)
+            {
+                <RaumCard sensor="@sensor"
+                          sensorMesswerte="@raumKlimaManager.GetLastMesswerteBySensorID(sensor.SensorID)"
+                          stateUpdateRequest="@updateRequest">
+                </RaumCard>
+            }
+        </div>
+    }
+
+</div>
+
+<style>
+    .fade-in {
+        opacity: 1;
+        animation-name: fadeInOpacity;
+        animation-iteration-count: 1;
+        animation-timing-function: ease-in;
+        animation-delay: 100ms;
+        animation-duration: 300ms;
+    }
+
+    @@keyframes fadeInOpacity {
+        0% {
+            opacity: 0;
+        }
+
+        100% {
+            opacity: 1;
+        }
+    }
+
+    .flexBox {
+        display: flex;
+        flex-direction: row;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+        align-items: stretch;
+    }
+    .flexBox2 {
+        align-items: center;
+        display: flex;
+        flex-direction: row;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+    }
+
+
+    .customCard {
+        margin: 10px;
+        box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.8);
+        border-radius: 10px;
+    }
+
+
+    .customCard .customCard{
+        margin: 10px;
+        box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+        border-radius: 10px;
+    }
+
+    @@media (max-width: 768px) {
+        .flexBox {
+            display: inherit;
+        }
+    }
+</style>
+
+@code{
+    public void updateRequest()
+    {
+        raumKlimaManager.refresh(); 
+        StateHasChanged();
+    }
+}

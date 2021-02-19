@@ -1,0 +1,288 @@
+﻿@page "/sensors"
+@using DataAccesLibrary
+@using Raumklima.Components
+@using Raumklima.Components.Dialoge
+@using MudBlazor
+@using MudBlazor.Dialog
+@using System.Reflection 
+
+@inject IDialogService Dialog
+@inject RaumklimaManager raumKlimaManager
+
+<div class="fade-in">
+    <h1>Sensoren</h1>
+    <div class="d-flex justify-content-between">
+        <h4>Alle vorhandene Sensoren</h4>
+        <MudItem xs="4" sm="4" md="2">
+            <MudSelect @bind-Value="@sortSelection" Label="Sort By" Variant="Variant.Outlined" Dense="true" OffsetY="true">
+                <MudSelectItem Value="@("Show all")" />
+                <MudSelectItem Value="@("Show latest")" />
+            </MudSelect>
+        </MudItem>
+    </div>
+    
+
+
+    @if (raumKlimaManager.messwerte is null)
+    {
+        <p><em>Loading ... </em></p>
+    }
+    else
+    {
+
+        @if (this.sortSelection.Equals("Show latest"))
+        {
+            <div class="flexBox">
+                @foreach (var sensoren in raumKlimaManager.sensoren)
+                {
+                    <div class="customCard">
+                        <div class="flexBox">
+                            <div @onclick="@(()=> @changePlot("Temperatur",sensoren))"
+                                 class="@getCSSClassBySensor("Temperatur",sensoren)">
+                                <SensorCard Messwert="@raumKlimaManager.GetLastMesswerteBySensorID(sensoren.SensorID)"
+                                            CardName="Temperatur: "
+                                            RaumName="@raumKlimaManager.GetRaumbezeichnungByID(sensoren.SensorID)"
+                                            stateUpdateRequest="@updateRequest">
+                                    @raumKlimaManager.GetLastMesswerteBySensorID(sensoren.SensorID).Temperatur °C
+                                </SensorCard>
+                            </div>
+                            <div @onclick="@(()=> @changePlot("Feuchte",sensoren))"
+                                 class="@getCSSClassBySensor("Feuchte",sensoren)">
+                                <SensorCard Messwert="@raumKlimaManager.GetLastMesswerteBySensorID(sensoren.SensorID)"
+                                            CardName="Feuchte: "
+                                            RaumName="@raumKlimaManager.GetRaumbezeichnungByID(sensoren.SensorID)"
+                                            stateUpdateRequest="@updateRequest">
+                                    @raumKlimaManager.GetLastMesswerteBySensorID(sensoren.SensorID).Feuchte %
+                                </SensorCard>
+                            </div>
+                            <div @onclick="@(()=> @changePlot("CO2",sensoren))"
+                                 class="@getCSSClassBySensor("CO2",sensoren)">
+                                <SensorCard Messwert="@raumKlimaManager.GetLastMesswerteBySensorID(sensoren.SensorID)"
+                                            CardName="CO2: "
+                                            RaumName="@raumKlimaManager.GetRaumbezeichnungByID(sensoren.SensorID)"
+                                            stateUpdateRequest="@updateRequest">
+                                    @raumKlimaManager.GetLastMesswerteBySensorID(sensoren.SensorID).CO2 ppm
+                                </SensorCard>
+                            </div>
+                        </div>
+                        <MudChart ChartType="ChartType.Line" ChartSeries="@series(sensoren)" XAxisLabels="@xAxisLabels(sensoren)" Width="500" Height="200"></MudChart>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {    
+            <div class="">
+                @foreach (var sensoren in raumKlimaManager.sensoren)
+                {
+                    <div class="flexboxVertical">
+                        <table class="styled-table">
+                            <thead>
+                                <tr>
+                                    <th>@sensoren.RaumBezeichnung</th>
+                                    <th>Wert ID</th>
+                                    <th>Temperatur</th>
+                                    <th>Feuchte</th>
+                                    <th>CO2</th>
+                                    <th>Zeit</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var messwerte in
+                                   raumKlimaManager.messwerte.FindAll(wert => { return wert.SensorID == sensoren.SensorID; }))
+                                {
+                                    <tr>
+                                        <td></td>
+                                        <td>@messwerte.WertID</td>
+                                        <td>@messwerte.Temperatur</td>
+                                        <td>@messwerte.Feuchte</td>
+                                        <td>@messwerte.CO2</td>
+                                        <td>@(@messwerte.Zeit.Hour + ":" + @messwerte.Zeit.Minute)</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        }
+    }
+</div>
+
+<style>
+    .fade-in {
+        opacity: 1;
+        animation-name: fadeInOpacity;
+        animation-iteration-count: 1;
+        animation-timing-function: ease-in;
+        animation-duration: 300ms;
+    }
+
+    @@keyframes fadeInOpacity {
+        0% {
+            opacity: 0;
+        }
+
+        100% {
+            opacity: 1;
+        }
+    }
+
+    .flexBox {
+        align-items: center;
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .flexboxVertical {
+        display: flex;
+        justify-content:center;
+        align-items: center;
+    }
+
+    .selected .customCard {
+        transition: 250ms;
+        border-radius: 10px;
+        box-shadow: 0 6px 8px 0 rgba(135, 50, 168, 0.8);
+    }
+
+    .customCard {
+        margin: 5px;
+        box-shadow: 0 4px 8px 0 rgba(0,0,0, 0.8);
+        border-radius: 10px;
+    }
+
+    .styled-table {
+        border-collapse: collapse;
+        margin: 25px;
+        font-size: 0.9em;
+        font-family: sans-serif;
+        min-width: 400px;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+        
+    }
+
+        .styled-table thead tr {
+            background-image: linear-gradient(90deg, rgb(0, 67, 130) 0%, #00827c 70%);
+            color: #ffffff;
+            text-align: left;
+            border-radius: 10px;
+        }
+
+    .styled-table th,
+    .styled-table td {
+        padding: 12px 15px;
+    }
+
+    .styled-table tbody tr {
+        border-bottom: 1px solid #dddddd;
+    }
+
+    .styled-table tbody tr:nth-of-type(even) {
+        background-color: #f3f3f3;
+    }
+
+    .styled-table tbody tr:last-of-type {
+        border-bottom: 2px solid #009879;
+    }
+
+   
+
+</style>
+
+@code {
+    string sortSelection { get; set; } = "Show latest";
+    public List<ChartSeries> Series = new List<ChartSeries>();
+    public ChartOptions Options = new ChartOptions() { YAxisTicks = 400};
+    public List<string> plotTypeSelection = new List<string>();
+
+    private List<Messwerte> getAllMesswerteBySensor(Sensor sensor)
+    {
+        return raumKlimaManager.messwerte.FindAll(item => { return item.SensorID == sensor.SensorID; });
+    }
+
+    public List<ChartSeries> series(Sensor sensor)
+    {
+        List<ChartSeries> s = new List<ChartSeries>();
+        List<Messwerte> listAllerMesswerte = getAllMesswerteBySensor(sensor);
+
+
+        int index = this.getIndexBySensor(sensor);
+        int startCondition = (listAllerMesswerte.Count >= 20) ? listAllerMesswerte.Count - 20 : 0;
+        double[] data = new double[(startCondition==0)?listAllerMesswerte.Count:20];
+        int dataIndex = 0;
+        for (int i = startCondition; i < listAllerMesswerte.Count;i++)
+        {
+            Type typeSensor = listAllerMesswerte[i].GetType();
+            PropertyInfo propInfo = typeSensor.GetProperty(this.plotTypeSelection[index]);
+            data[dataIndex] = Convert.ToDouble(propInfo.GetValue(listAllerMesswerte[i], null));
+            dataIndex++;
+        }
+        s.Add(new ChartSeries() { Name = this.plotTypeSelection[index], Data = data });
+        return s;
+    }
+
+    public string[] xAxisLabels(Sensor sensor)
+    {
+        List<Messwerte> listAllerMesswerte = getAllMesswerteBySensor(sensor);
+        string[] labels = new string[listAllerMesswerte.Count];
+
+        for (int i = 0; i < listAllerMesswerte.Count; i++)
+        {
+            labels[i] = listAllerMesswerte[i].Zeit.Hour + ":" + listAllerMesswerte[i].Zeit.Minute;
+        }
+        return labels;
+    }
+
+    private int getIndexBySensor(Sensor sensor) {
+        return raumKlimaManager.sensoren.FindIndex(index => { return index.SensorID == sensor.SensorID; });
+    }
+
+    private string getCSSClassBySensor(string defaultType,Sensor sensor)
+    {
+        int index = this.getIndexBySensor(sensor);
+        return (this.plotTypeSelection[index]==defaultType)?"selected":"";
+    }
+
+    public void changePlot(string type,Sensor sensor)
+    {
+        int index = this.getIndexBySensor(sensor);
+        this.plotTypeSelection[index] = type;
+    }
+
+    private async void openAddDialog()
+    {
+        var dialogParams = new DialogParameters();
+        dialogParams.Add("isModeAdd",true);
+        var dialog = Dialog.Show<DialogSensorAdd>("Sensorgruppe hinzufügen", dialogParams);
+        var result = await dialog.Result;
+        if (!result.Cancelled)
+        {
+            var task = raumKlimaManager.refresh();
+            task.Wait();
+            StateHasChanged();
+        }
+    }
+
+    private EventCallback sortSelectionChanged(string cb)
+    {
+        //irgendwas machen
+        this.sortSelection = "Hello World";
+        return new EventCallback();
+    }
+
+    public void updateRequest()
+    {
+        raumKlimaManager.refresh();
+        StateHasChanged();
+    }
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        for (int i = 0; i < this.raumKlimaManager.sensoren.Count; i++)
+            this.plotTypeSelection.Add("Temperatur");
+    }
+}

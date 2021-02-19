@@ -1,0 +1,126 @@
+﻿@using MudBlazor
+@using MudBlazor.Dialog
+@using DataAccesLibrary
+
+@inject ISnackbar Snackbar
+@inject ISqlDataAccess db
+@inject RaumklimaManager raumklimaManager
+@inject IJSRuntime jsRuntime
+
+<MudDialog style="width:500px;">
+    <DialogContent>
+        <MudTextField @bind-Value="selectionSensorID" Label="ID *" Variant="Variant.Outlined"></MudTextField>
+        <div class="textFieldSubtext">* Es wird eine vorgeschlagen ID verwendet. Sie dürfen die ID ändern.</div>
+        <MudSelect T="Sensor" @bind-Value="@selectionRaum" Label="Raum:" Variant="Variant.Outlined" ToStringFunc="@converter" OffsetY="true">
+            <MudContainer Style="selectionRaumScroll">
+                @foreach (var raum in this.raumWithNoSensors)
+                {
+                    <MudSelectItem Value="@(raum)" />
+                }
+            </MudContainer>
+        </MudSelect>
+</DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Warning" OnClick="Submit">Ok</MudButton>
+    </DialogActions>
+</MudDialog>
+
+<style>
+    .textFieldSubtext {
+        font-size: 10px;
+        margin: 1px;
+        text-wrap: normal;
+    }
+    .selectionRaumScroll {
+        margin: 0px;
+        max-height: 300px;
+        overflow-y: scroll;
+    }
+</style>
+
+@code {
+    [CascadingParameter]
+    MudDialogInstance MudDialog { get; set; }
+
+    [Parameter]
+    public bool isModeAdd { get; set; } = false;
+
+    [Parameter]
+    public Sensor selectionRaum { get; set; }   //Wird verwendet, wenn ein neuer Messwert-Datensatz hinzugefügt wird.
+
+    [Parameter]
+    public Messwerte messwert { get; set; }    //Wird verwendet, wenn ein Messwert-Datensatz bearbeitet wird.
+
+    private string raumBezeichnung { get; set; }
+    private List<Sensor> raumWithNoSensors { get; set; }
+
+    private int selectionSensorID { get; set; }
+
+    protected async override Task OnInitializedAsync()
+    {
+        this.SnackbarConfig();
+        string query = "SELECT * from sensor WHERE NOT EXISTS (SELECT * FROM messwert WHERE sensor.sensorID = messwert.sensorID) ";
+        this.raumWithNoSensors = await db.LoadData<Sensor, dynamic>(query, new { });
+
+        //wenn es keine Räume ohne Sensoren gibt -> return -> raus aus OnInitializedAsync
+        if (!this.raumWithNoSensors.Any())
+        {
+            this.SnackbarConfig();
+            Snackbar.Add("Es gibt kein Raum ohne Sensoren. Fügen Sie bitte ein neues hinzu.", Severity.Error);
+            MudDialog.Cancel();
+            return;
+        }
+
+        //sonst gehts hier weiter -> hier werden die Parametern für das Dialog initialisiert
+        if (isModeAdd)
+        {
+            this.selectionSensorID = (raumklimaManager.messwerte.Any())?raumklimaManager.messwerte.Last().WertID + 1:1;
+            this.selectionRaum = raumWithNoSensors.First();
+        }//else : Parametern werden verwendet, wie er ist -> dialogConfig.Add("selectionRaum",Sensor raum);
+        else
+        {
+            this.selectionSensorID = this.messwert.WertID;
+            this.selectionRaum = raumklimaManager.GetSensorByID(this.messwert.SensorID);
+            this.raumWithNoSensors.Add(selectionRaum);
+        }
+    }
+
+    private void SnackbarConfig()
+    {
+        Snackbar.Clear();
+        Snackbar.Configuration.MaxDisplayedSnackbars = 3;
+        Snackbar.Configuration.PositionClass = Defaults.Classes.Position.TopRight;
+        Snackbar.Configuration.SnackbarVariant = Variant.Filled;
+        Snackbar.Configuration.ShowTransitionDuration = 500;
+        Snackbar.Configuration.HideTransitionDuration = 500;
+        Snackbar.Configuration.VisibleStateDuration = 4000;
+    }
+
+    private void Submit()
+    {
+        if (isModeAdd)
+        {
+            raumklimaManager.AddNewMesswert(this.selectionRaum.SensorID);
+            Snackbar.Add("Konfiguration gespeichert", Severity.Info);
+        }
+        else
+        {
+            //es wird überprüft, ob sich die Auswahl vom Ist- Datensatz differenziert
+            //wenn sie sich differenzieren, dann ist die If- Bedienungen true, keine SQL Query finded statt.
+            if (this.selectionSensorID != this.messwert.WertID ||
+            this.selectionRaum.RaumBezeichnung != raumklimaManager.GetSensorByID(this.messwert.SensorID).RaumBezeichnung)
+            {
+                raumklimaManager.SetSensorIDInMesswerte(this.selectionSensorID, this.selectionRaum.SensorID);
+                Snackbar.Add("Konfiguration gespeichert", Severity.Info);
+            }
+            else
+                Snackbar.Add("Konfiguration ist gleichgeblieben. Keine Änderungen vorgenommen.", Severity.Info);
+        }
+        Task.Run(() => raumklimaManager.refresh());
+        MudDialog.Close(DialogResult.Ok(true));
+    }
+    private void Cancel() => MudDialog.Cancel();
+
+    Func<Sensor, string> converter = (s) => s?.RaumBezeichnung;
+}

@@ -1,0 +1,50 @@
+﻿<div class="top-row pl-4 navbar navbar-dark">
+    <a class="navbar-brand" href="">Raumklima</a>
+    <button class="navbar-toggler" @onclick="ToggleNavMenu">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+</div>
+
+<div class="@NavMenuCssClass nav_menu" @onclick="ToggleNavMenu">
+    <ul class="nav flex-column">
+        <li class="nav_item px-3">
+            <NavLink class="nav-link text-black-50" href="" Match="NavLinkMatch.All">
+                <span class="oi oi-home" aria-hidden="true"></span> Home
+            </NavLink>
+        </li>
+        <li class="nav_item px-3">
+            <NavLink class="nav-link text-black-50" href="sensors">
+                <span class="oi oi-rain" aria-hidden="true"></span> Sensoren
+            </NavLink>
+        </li>
+        <li class="nav_item px-3">
+            <NavLink class="nav-link text-black-50" href="raeume">
+                <span class="oi oi-location" aria-hidden="true"></span> Räume
+            </NavLink>
+        </li>
+    </ul>
+</div>
+<style>
+
+    .nav_item:hover {
+        transition: 0.5s;
+        color: white;
+        margin-left: 10px;
+        margin-right: 10px;
+        border-radius: 8px;
+        border-style: none;
+        background-color: white;
+    }
+</style>
+
+@code {
+    private bool collapseNavMenu = true;
+    
+
+    private string NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+
+    private void ToggleNavMenu()
+    {
+        collapseNavMenu = !collapseNavMenu;
+    }
+}

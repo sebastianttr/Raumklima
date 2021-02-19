@@ -1,0 +1,91 @@
+﻿@page "/raeume"
+
+@using DataAccesLibrary
+@using Raumklima.Components
+@using Raumklima.Components.Dialoge
+@using MudBlazor
+@using MudBlazor.Dialog
+
+@inject IDialogService Dialog
+@inject RaumklimaManager raumKlimaManager
+
+
+<div class="fade-in">
+    <h1>Räume</h1>
+    <h4>Alle vorhandene Räume</h4>
+
+    <MudFab Class="fab" Color="Color.Primary" Icon="@Icons.Material.Add" @onclick="openAddDialog" />
+
+    @if (raumKlimaManager.sensoren is null)
+    {
+        <p><em>Loading ... </em></p>
+    }
+    else
+    {
+        <div class="flexBox">
+            @foreach (var sensor in raumKlimaManager.sensoren)
+            {
+                <RaumCard sensor="@sensor"
+                          sensorMesswerte="@raumKlimaManager.GetLastMesswerteBySensorID(sensor.SensorID)"
+                          stateUpdateRequest="@(() =>{ raumKlimaManager.refresh(); StateHasChanged(); })"></RaumCard>
+            }
+        </div>
+    }
+</div>
+
+<style>
+    .fade-in {
+        opacity: 1;
+        animation-name: fadeInOpacity;
+        animation-iteration-count: 1;
+        animation-timing-function: ease-in;
+        animation-duration: 300ms;
+    }
+
+    @@keyframes fadeInOpacity {
+        0% {
+            opacity: 0;
+        }
+
+        100% {
+            opacity: 1;
+        }
+    }
+
+    .flexBox {
+        align-items: stretch;
+        display: flex;
+        flex-direction: row;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+    }
+
+    @@media (max-width: 768px) {
+        .flexBox {
+            display: inherit;
+        }
+    }
+
+    .fab {
+        position: fixed;
+        bottom: 18px;
+        right: 18px;
+    }
+</style>
+
+@code {
+    private string title = "Räume";
+
+    private async void openAddDialog()
+    {
+
+        var dialog = Dialog.Show<DialogRaumAdd>("Raum Hinzufügen");
+        var result = await dialog.Result;
+        if (!result.Cancelled)
+        {
+            var task = raumKlimaManager.refresh();
+            task.Wait();
+            StateHasChanged();
+        }
+    }
+}

@@ -1,0 +1,133 @@
+﻿@using DataAccesLibrary
+@using MudBlazor
+@using MudBlazor.Dialog
+@using Raumklima.Components.Dialoge 
+
+@inject ISnackbar Snackbar 
+@inject IDialogService Dialog 
+@inject RaumklimaManager raumKlimaManager
+ 
+    <div class="customCard">
+        <div class="customCardRoom">
+            <div class="panel panel-default customCardData">
+                <div class="d-flex flex-row justify-content-between">
+                    <div class="customCardKey">@CardName</div>
+                    <!--
+                    <MudMenu Size="Size.Small" Icon="@Icons.Material.MoreVert">
+                        <MudMenuItem @onclick="@(() => EditSensor())">Editieren</MudMenuItem>
+                        <MudMenuItem @onclick="@(() => RemoveSensor())">Löschen</MudMenuItem>
+                    </MudMenu>
+                     -->
+                </div>
+                <div class="customCardValue">@ChildContent</div>
+            </div>
+            @if (RaumName != null)
+            {
+                <div class="customCardRoomText">
+                    im Raum <b>@RaumName</b>
+                </div>
+            }
+        </div>
+    </div>
+
+    <style>
+        .customCard {
+            border-radius: 15px;
+            margin: 5px;
+            box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.8);
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .customCardRoom {
+            background-color: white;
+            color: black;
+        }
+
+        .customCardRoomText {
+            font-size: 14px;
+            margin: 5px;
+        }
+
+        .customCardData {
+            background-image: linear-gradient(90deg, rgb(0, 67, 130) 0%, #00827c 70%);
+            padding: 5px;
+            color: white;
+        }
+
+        .customCardKey {
+            font-size: 16px;
+            margin: 1px;
+        }
+
+        .customCardValue {
+            font-size: 25px;
+            margin: 1px;
+        }
+        .morevertSize{
+            height:10px;
+            width:10px;
+        }
+    </style>
+
+    @code {
+        [Parameter]
+        public Messwerte Messwert { get; set; }
+
+        [Parameter]
+        public string CardName { get; set; }
+
+        [Parameter]
+        public string RaumName { get; set; }
+
+        [Parameter]
+        public RenderFragment ChildContent { get; set; }
+
+        [Parameter]
+        public Action stateUpdateRequest { get; set; }
+
+        async Task EditSensor()
+        {
+            var dialogParams = new DialogParameters();
+            dialogParams.Add("isModeAdd", false);
+            dialogParams.Add("messwert", this.Messwert);
+            var dialog = Dialog.Show<DialogSensorAdd>("Sensorgruppe Editieren", dialogParams);
+            var result = await dialog.Result;
+            if (!result.Cancelled)
+            {
+                stateUpdateRequest();
+            }
+        }
+
+        private void SnackbarConfig()
+        {
+            Snackbar.Clear();
+            Snackbar.Configuration.MaxDisplayedSnackbars = 3;
+            Snackbar.Configuration.PositionClass = Defaults.Classes.Position.TopRight;
+            Snackbar.Configuration.SnackbarVariant = Variant.Filled;
+            Snackbar.Configuration.ShowTransitionDuration = 500;
+            Snackbar.Configuration.HideTransitionDuration = 500;
+            Snackbar.Configuration.VisibleStateDuration = 4000;
+        }
+
+        async Task RemoveSensor()
+        {
+            var confDialogParameters = new DialogParameters();
+            confDialogParameters.Add("Text", "Die Sensorgruppe wird entfernt. Sind sie sicher?");
+            var dialog = Dialog.Show<DialogSimpleConfirmation>("Sensorgruppe entfernen", confDialogParameters);
+            var result = await dialog.Result;
+            if (!result.Cancelled)                  //Ok gedrückt
+            {
+                this.SnackbarConfig();
+                if(!await raumKlimaManager.RemoveMesswerteByID(this.Messwert.WertID))
+                {
+                    Snackbar.Add("Error!", Severity.Error);
+                }
+                else
+                {
+                    stateUpdateRequest();
+                    Snackbar.Add("Sensorgruppe entfernt!", Severity.Normal);
+                }
+            }
+        }
+    }

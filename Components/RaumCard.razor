@@ -1,0 +1,133 @@
+﻿
+@using DataAccesLibrary
+@using MudBlazor
+@using MudBlazor.Dialog
+@using Raumklima.Components.Dialoge
+
+@inject IJSRuntime jsRuntime
+@inject IDialogService Dialog
+@inject RaumklimaManager raumklimaManager
+@inject ISnackbar Snackbar 
+
+<div class="customCardRaum">
+    <div class="d-flex flex-row justify-content-between">
+        <div class="customCardRaumTitel">Raum @sensor.RaumBezeichnung</div>
+        <MudMenu Icon="@Icons.Material.MoreVert">
+            <MudMenuItem @onclick="@(() => EditRaum(sensor.RaumBezeichnung,sensor.SensorID))">Editieren</MudMenuItem>
+            <MudMenuItem @onclick="@(() => RemoveRaum(sensor.SensorID))">Löschen</MudMenuItem>
+        </MudMenu>
+    </div>
+
+    <div class="customCardRaumSensoren">
+        @if (sensorMesswerte != null)
+        {
+            <SensorCard CardName="Temperatur"
+                        Messwert="sensorMesswerte"
+                        stateUpdateRequest="@stateUpdateRequest">
+                @sensorMesswerte.Temperatur °C
+            </SensorCard>
+            <SensorCard CardName="Feuchte"
+                        Messwert="sensorMesswerte"
+                        stateUpdateRequest="@stateUpdateRequest">
+                @sensorMesswerte.Feuchte %
+            </SensorCard>
+            <SensorCard CardName="CO2"
+                        Messwert="sensorMesswerte"
+                        stateUpdateRequest="@stateUpdateRequest">
+                @sensorMesswerte.CO2 ppm
+            </SensorCard>
+        }
+        else
+        {
+            <h5><b>Keine Daten!</b></h5>
+        }
+    </div>
+</div>
+
+<style>
+    .customCardRaum {
+        padding: 5px;
+        margin: 5px;
+        box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.8);
+        border-radius: 10px;
+    }
+
+    .customCardRaumTitel {
+        font-size: 25px;
+        margin-left: 10px;
+        margin-top: 10px;
+    }
+
+    .customCardRaumSensoren {
+        align-items: center;
+        display: flex;
+        flex-direction: row;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+    }
+</style>
+
+@code {
+    [Parameter]
+    public Sensor sensor { get; set; }
+
+    [Parameter]
+    public Messwerte sensorMesswerte { get; set; }
+
+    [Parameter]
+    public Action stateUpdateRequest { get; set; }
+
+    async Task EditRaum(string raumBez, int id)
+    {
+        var parameters = new DialogParameters();
+        parameters.Add("Raumbezeichnung", raumBez);
+        parameters.Add("SensorID", id);
+        var dialog = Dialog.Show<DialogRaumEdit>("Raum Editieren", parameters);
+        var result = await dialog.Result;
+        if (!result.Cancelled)
+        {
+            stateUpdateRequest();
+        }
+    }
+
+    private void SnackbarConfig()
+    {
+        Snackbar.Clear();
+        Snackbar.Configuration.MaxDisplayedSnackbars = 3;
+        Snackbar.Configuration.PositionClass = Defaults.Classes.Position.TopRight;
+        Snackbar.Configuration.SnackbarVariant = Variant.Filled;
+        Snackbar.Configuration.ShowTransitionDuration = 500;
+        Snackbar.Configuration.HideTransitionDuration = 500;
+        Snackbar.Configuration.VisibleStateDuration = 4000;
+    }
+
+    async Task RemoveRaum(int id)   //ID ist SensorID!!!
+    {
+        var dialog = Dialog.Show<DialogRaumRemove>("Raum entfernen");
+        var result = await dialog.Result;
+        if (!result.Cancelled)                  //Ok gedrückt
+        {
+            this.SnackbarConfig();
+            var resultQuery = await raumklimaManager.RemoveRaum(id);
+            if (!resultQuery)
+            {
+                //wenn Raum-Löschung eine Exception zurückgibt -> resutlQuery = false
+                string confDialogText = string.Format("Die Sensoren in Raum {0} werden auf keinen Raum mehr verweißen" +
+                    "und werden somit gelöscht. Wollen sie trotzdem fortsetzten?",raumklimaManager.GetRaumbezeichnungByID(id));
+                var confDialogParameters = new DialogParameters();
+                confDialogParameters.Add("Text", confDialogText);
+                var confDialog = Dialog.Show<DialogSimpleConfirmation>("Warning!", confDialogParameters);
+                var confDialogResult = await confDialog.Result;
+                if (!confDialogResult.Cancelled)        //Ok gedrückt
+                {
+                    if (!await raumklimaManager.RemoveMesswerteBySensorID(id) || !await raumklimaManager.RemoveRaum(id))
+                    {
+                        Snackbar.Add("Error removing Raum!", Severity.Error);
+                    }
+                }
+            }
+            stateUpdateRequest();
+        }
+    }
+}
+

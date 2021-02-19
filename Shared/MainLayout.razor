@@ -1,0 +1,60 @@
+﻿@inherits LayoutComponentBase
+@using MudBlazor
+@using Microsoft.JSInterop
+
+<!--
+<div class="sidebar">
+    <NavMenu />
+</div>
+
+<div class="main" style="overflow:hidden">
+    <div class="content px-4" style="overflow:scroll;height:100%">
+        @Body
+    </div>
+</div>
+    -->
+
+
+<MudLayout>
+    <MudAppBar Style="background-color:white;" Elevation="0">
+        <MudIconButton Icon="@Icons.Material.Menu" Color="Color.Success" Edge="Edge.Start" OnClick="@ToggleDrawer" />
+        <div style="color:black;font-size:20px;"> Raumklima Manager</div>
+        <MudAppBarSpacer />
+    </MudAppBar>
+    <MudDrawer Style="  background-color: rgb(0, 67, 130);
+                        color: white;
+                        box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.8);
+                        border-radius: 0px 15px 15px 0px;" 
+               @bind-Open="@open" Elevation="0">
+        <MudDrawerHeader>
+            <MudText Typo="Typo.h6">Raumklima</MudText>
+        </MudDrawerHeader>
+        <MudNavMenu>
+            <MudNavLink Icon="@Icons.Material.Dashboard" Href="/" Match="NavLinkMatch.All">Dashboard</MudNavLink>
+            <MudNavLink Icon="@Icons.Material.WbSunny" Href="/sensors" Match="NavLinkMatch.Prefix">Sensoren</MudNavLink>
+            <MudNavLink Icon="@Icons.Material.Room" Href="/raeume" Match="NavLinkMatch.Prefix">Räume</MudNavLink>
+        </MudNavMenu>
+    </MudDrawer>
+    <MudMainContent>
+        <MudContainer>
+            @Body
+        </MudContainer>
+    </MudMainContent>
+</MudLayout>
+
+<style>
+   
+
+
+</style>
+    
+
+@code{
+    bool open = true;
+
+
+    void ToggleDrawer()
+    {
+        open = !open;
+    }
+}

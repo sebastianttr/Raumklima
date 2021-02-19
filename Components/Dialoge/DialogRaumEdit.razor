@@ -1,0 +1,44 @@
+﻿@using MudBlazor
+@using MudBlazor.Dialog
+@using DataAccesLibrary 
+@inject ISnackbar Snackbar
+@inject ISqlDataAccess db
+@inject RaumklimaManager raumklimaManager
+
+<MudDialog style="width:300px;">
+    <DialogContent>
+        <MudTextField FullWidth="false" @bind-Value="Raumbezeichnung" Label="Raumbezeichnung" Variant="Variant.Text"></MudTextField>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Submit">Ok</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    MudDialogInstance MudDialog { get; set; }
+
+    [Parameter]
+    public string Raumbezeichnung { get; set; }
+
+    [Parameter]
+    public int SensorID { get; set; }
+
+    void Submit()
+    {
+        raumklimaManager.SetRaumbezeichnungByID(this.SensorID,this.Raumbezeichnung);
+        MudDialog.Close(DialogResult.Ok(true));
+        Snackbar.Clear();
+        Snackbar.Configuration.MaxDisplayedSnackbars = 3;
+        Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
+        Snackbar.Configuration.SnackbarVariant = Variant.Filled;
+        Snackbar.Configuration.ShowTransitionDuration = 500;
+        Snackbar.Configuration.HideTransitionDuration = 500;
+        Snackbar.Configuration.VisibleStateDuration = 4000;
+        Snackbar.Add("Konfiguration gespeichert", Severity.Info);
+        StateHasChanged();
+    }
+    void Cancel() => MudDialog.Cancel();
+}
+
