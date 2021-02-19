@@ -48,6 +48,13 @@ namespace Raumklima.API
             return "HTTP POST Came In Succesfully!";
         }
 
+        [HttpGet("api/addSensor/{name}")]
+        public string addSensor(string name, [FromServices] RaumklimaManager raumklimaManager)
+        {
+            raumklimaManager.AddNewRaum(name);
+            return "Succesfully added new room with name " + name;
+        }
+
         [HttpPost("api/postTest")]
         public string postTest([FromBody] dynamic messwert, [FromServices] RaumklimaManager raumklimaManager)
         {
@@ -94,8 +101,8 @@ namespace Raumklima.API
                 Messwerte messwerte = 
                     raumklimaManager.GetLastMesswerteBySensorID(sensor.SensorID);
                 MesswerteDTO dto = _mapper.Map<MesswerteDTO>(messwerte);
-                mapOfSensor.Add(sensor.RaumBezeichnung,dto);
-            }
+                mapOfSensor.Add(sensor.RaumBezeichnung, dto);
+                }
             return mapOfSensor;
         }
 

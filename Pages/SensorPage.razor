@@ -35,40 +35,43 @@
             <div class="flexBox">
                 @foreach (var sensoren in raumKlimaManager.sensoren)
                 {
-                    <div class="customCard">
-                        <div class="flexBox">
-                            <div @onclick="@(()=> @changePlot("Temperatur",sensoren))"
-                                 class="@getCSSClassBySensor("Temperatur",sensoren)">
-                                <SensorCard Messwert="@raumKlimaManager.GetLastMesswerteBySensorID(sensoren.SensorID)"
-                                            CardName="Temperatur: "
-                                            RaumName="@raumKlimaManager.GetRaumbezeichnungByID(sensoren.SensorID)"
-                                            stateUpdateRequest="@updateRequest">
-                                    @raumKlimaManager.GetLastMesswerteBySensorID(sensoren.SensorID).Temperatur °C
-                                </SensorCard>
+                    @if (raumKlimaManager.GetLastMesswerteBySensorID(sensoren.SensorID) != null)
+                    {
+                        <div class="customCard">
+                            <div class="flexBox">
+                                <div @onclick="@(() => @changePlot("Temperatur", sensoren))"
+                                     class="@getCSSClassBySensor("Temperatur", sensoren)">
+                                    <SensorCard Messwert="@raumKlimaManager.GetLastMesswerteBySensorID(sensoren.SensorID)"
+                                                CardName="Temperatur: "
+                                                RaumName="@raumKlimaManager.GetRaumbezeichnungByID(sensoren.SensorID)"
+                                                stateUpdateRequest="@updateRequest">
+                                        @raumKlimaManager.GetLastMesswerteBySensorID(sensoren.SensorID).Temperatur °C
+                                    </SensorCard>
+                                </div>
+                                <div @onclick="@(() => @changePlot("Feuchte", sensoren))"
+                                     class="@getCSSClassBySensor("Feuchte", sensoren)">
+                                    <SensorCard Messwert="@raumKlimaManager.GetLastMesswerteBySensorID(sensoren.SensorID)"
+                                                CardName="Feuchte: "
+                                                RaumName="@raumKlimaManager.GetRaumbezeichnungByID(sensoren.SensorID)"
+                                                stateUpdateRequest="@updateRequest">
+                                        @raumKlimaManager.GetLastMesswerteBySensorID(sensoren.SensorID).Feuchte %
+                                    </SensorCard>
+                                </div>
+                                <div @onclick="@(() => @changePlot("CO2", sensoren))"
+                                     class="@getCSSClassBySensor("CO2", sensoren)">
+                                    <SensorCard Messwert="@raumKlimaManager.GetLastMesswerteBySensorID(sensoren.SensorID)"
+                                                CardName="CO2: "
+                                                RaumName="@raumKlimaManager.GetRaumbezeichnungByID(sensoren.SensorID)"
+                                                stateUpdateRequest="@updateRequest">
+                                        @raumKlimaManager.GetLastMesswerteBySensorID(sensoren.SensorID).CO2 ppm
+                                    </SensorCard>
+                                </div>
                             </div>
-                            <div @onclick="@(()=> @changePlot("Feuchte",sensoren))"
-                                 class="@getCSSClassBySensor("Feuchte",sensoren)">
-                                <SensorCard Messwert="@raumKlimaManager.GetLastMesswerteBySensorID(sensoren.SensorID)"
-                                            CardName="Feuchte: "
-                                            RaumName="@raumKlimaManager.GetRaumbezeichnungByID(sensoren.SensorID)"
-                                            stateUpdateRequest="@updateRequest">
-                                    @raumKlimaManager.GetLastMesswerteBySensorID(sensoren.SensorID).Feuchte %
-                                </SensorCard>
-                            </div>
-                            <div @onclick="@(()=> @changePlot("CO2",sensoren))"
-                                 class="@getCSSClassBySensor("CO2",sensoren)">
-                                <SensorCard Messwert="@raumKlimaManager.GetLastMesswerteBySensorID(sensoren.SensorID)"
-                                            CardName="CO2: "
-                                            RaumName="@raumKlimaManager.GetRaumbezeichnungByID(sensoren.SensorID)"
-                                            stateUpdateRequest="@updateRequest">
-                                    @raumKlimaManager.GetLastMesswerteBySensorID(sensoren.SensorID).CO2 ppm
-                                </SensorCard>
-                            </div>
+                            <MudChart ChartType="ChartType.Line" ChartSeries="@series(sensoren)" XAxisLabels="@xAxisLabels(sensoren)" Width="500" Height="200"></MudChart>
                         </div>
-                        <MudChart ChartType="ChartType.Line" ChartSeries="@series(sensoren)" XAxisLabels="@xAxisLabels(sensoren)" Width="500" Height="200"></MudChart>
-                    </div>
-                }
-            </div>
+                        }
+                    }
+                </div>
         }
         else
         {    

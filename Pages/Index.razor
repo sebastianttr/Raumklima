@@ -21,6 +21,8 @@
             @foreach (var sensor in raumKlimaManager.sensoren)
             {
             <div class="customCard flexBox2">
+                @if(raumKlimaManager.GetLastMesswerteBySensorID(sensor.SensorID)!=null)
+                {
                     <SensorCard Messwert="@raumKlimaManager.GetLastMesswerteBySensorID(sensor.SensorID)"
                                 CardName="Temperatur: "
                                 RaumName="@raumKlimaManager.GetRaumbezeichnungByID(sensor.SensorID)"
@@ -39,6 +41,7 @@
                                 stateUpdateRequest="@updateRequest">
                         @raumKlimaManager.GetLastMesswerteBySensorID(sensor.SensorID).CO2 ppm
                     </SensorCard>
+                }
             </div>
             }
         </div>
