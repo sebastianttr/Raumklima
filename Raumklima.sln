@@ -7,6 +7,12 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Raumklima", "Raumklima.cspr
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataAccesLibrary", "..\DataAccesLibrary\DataAccesLibrary.csproj", "{2D818FAD-4188-4DD4-B196-538373AEFC55}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Images", "Images", "{D4555982-1741-44F8-A637-C03C15C015F6}"
+	ProjectSection(SolutionItems) = preProject
+		C:\Users\narit\Downloads\RaumklimaApp.PNG = C:\Users\narit\Downloads\RaumklimaApp.PNG
+		C:\Users\narit\Downloads\RaumklimaMobileApp.PNG = C:\Users\narit\Downloads\RaumklimaMobileApp.PNG
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
